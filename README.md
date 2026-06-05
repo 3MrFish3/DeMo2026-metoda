@@ -1,5 +1,4 @@
-# DeMo2026-metoda
-[README.md](https://github.com/user-attachments/files/28541767/README.md)
+[README (1).md](https://github.com/user-attachments/files/28629647/README.1.md)
 <img width="561" height="671" alt="изображение" src="https://github.com/user-attachments/assets/c2ae75fa-bb8c-4d8b-97fc-5d024a828db3" />
 <br/>
 
@@ -39,7 +38,6 @@
 > ```
 > sysctl --system
 > ```
->
 > 
 ></br>
 >
@@ -876,11 +874,21 @@ MaxAuthTries 2
 PasswordAuthentication yes
 Banner /etc/ssh/banner
 AllowUsers  sshuser
-           ^ - это TAB
+         
 ```
+          ^ - это TAB
+
+
+
 <br/>
 
 **3.** После чего требуется создать файл **`/etc/ssh/banner`** и привести его в следующую форму:
+
+```
+nano /etc/ssh/banner
+```
+
+
 ```
 ----------------------
 Authorized access only
@@ -1465,6 +1473,31 @@ systemctl enable isc-dhcp-server
 <details>
 <summary><strong>Настройка при помощи <code>bind9</code></strong>[Дольше]</summary>
 
+<details>
+<summary><strong>Если возникли ошибки при установке</strong>[Дольше]</summary>
+
+Полное очищение от bind9:
+
+```
+apt-get purge bind9 bind9-utils bind9-dnsutils dnsmasq -y
+```
+
+```
+apt-get autoremove --purge -y
+```
+
+```
+rm -rf /etc/bind
+```
+
+Обновление имеющейся информации о пакетах на устройстве:
+
+```
+apt update
+```
+  
+</details>
+
 <br/>
 
 ## > Настройка BIND9 на `HQ-SRV`<
@@ -1569,6 +1602,8 @@ cp /etc/bind/db.local /etc/bind/au-team.irpo
 
 </br>
 
+# Если файл не найден, то ничего страшного, просто создайте его сами через команду <code>touch</code>!!
+
 **8.** После чего приводим **файл `au-team.irpo`** к следующему виду:
 ```
 nano /etc/bind/au-team.irpo
@@ -1577,7 +1612,7 @@ nano /etc/bind/au-team.irpo
 ```
 $TTL    1D
 @       IN      SOA     hq-srv.au-team.irpo. root.au-team.irpo. (
-                                2024102200      ; serial
+                                2026102200      ; serial
                                 12H             ; refresh
                                 1H              ; retry
                                 1W              ; expire
@@ -1617,7 +1652,7 @@ nano /etc/bind/111.168.192.in-addr.arpa
 ```
 $TTL    1D
 @       IN      SOA     hq-srv.au-team.irpo. root.au-team.irpo. (
-                                2024102200      ; Serial
+                                2026102200      ; Serial
                                 12H             ; Refresh
                                 1H              ; Retry
                                 1W              ; Expire
@@ -1638,7 +1673,7 @@ nano /etc/bind/211.168.192.in-addr.arpa
 ```
 $TTL    1D
 @       IN      SOA     hq-srv.au-team.irpo. root.au-team.irpo. (
-                                2024102200      ; Serial
+                                2026102200      ; Serial
                                 12H             ; Refresh
                                 1H              ; Retry
                                 1W              ; Expire
@@ -1658,7 +1693,7 @@ nano /etc/bind/0.168.192.in-addr.arpa
 ```
 $TTL    1D
 @       IN      SOA     hq-srv.au-team.irpo. root.au-team.irpo. (
-                                2024102200      ; Serial
+                                2026102200      ; Serial
                                 12H             ; Refresh
                                 1H              ; Retry
                                 1W              ; Expire
@@ -1678,6 +1713,11 @@ $TTL    1D
 named-checkconf -z
 ```
 </br>
+
+Вывод должен быть такой:
+
+
+
 
 **14.** А также перезапускаем **`bind`** командой:
 
@@ -1733,7 +1773,7 @@ systemctl restart nftables
 cat << 'EOF' > /etc/dnsmasq.conf
 no-resolv
 interface=ens192
-listen-address=192.168.111.62,127.0.0.1
+listen-address=192.168.111.15,127.0.0.1
 read-ethers
 
 server=8.8.8.8
@@ -1891,9 +1931,13 @@ nano /etc/resolv.conf
 ```
 nameserver 8.8.8.8
 
+nameserver 192.168.111.15
+
 nameserver 1.1.1.1
 
 search br-srv.au-team.irpo
+
+search au-team.irpo
 ```
 
 </br>
@@ -2354,21 +2398,13 @@ samba-tool group addunixattrs hq 10065
 
 ```
  samba-tool user addunixattrs hquser1 10060 --gid-number=10065 
-```
 
-```
- samba-tool user addunixattrs hquser2 10061 --gid-number=10065 
-```
+ samba-tool user addunixattrs hquser2 10061 --gid-number=10065
 
-```
  samba-tool user addunixattrs hquser3 10062 --gid-number=10065 
-```
 
-```
  samba-tool user addunixattrs hquser4 10063 --gid-number=10065 
-```
 
-```
 samba-tool user addunixattrs hquser5 10064 --gid-number=10065 
 ```
 
@@ -2576,7 +2612,7 @@ apt install mdadm -y
 Компелируем диски в рейд:
 
 ```
-mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+mdadm --create --verbose /dev/md1 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
 ```
 
 Создаём файл для коректного сюора рейда и заночим изминения:
@@ -2740,7 +2776,7 @@ nano /etc/exports
 Или
 
 ```
-echo "/raid/nfs 192.168.211.3/28(rw,sync,no_subtree_check)" >> /etc/exports
+echo "/raid/nfs 192.168.211.2/28(rw,sync,no_subtree_check)" >> /etc/exports
 ```
 
 ## Если дальше по заданию не заработает, укажите точный IP
@@ -3018,7 +3054,7 @@ Port 2011
 PermitRootLogin yes
 ```
 
-# Как должно выглядеть устройство:
+# Как должн выглядеть сервер:
 
 <img width="560" height="146" alt="изображение" src="https://github.com/user-attachments/assets/53e0cce3-5677-43bd-a0a8-7e4ea1b7eb6a" />
 
@@ -3069,7 +3105,7 @@ ssh-keygen -t rsa
 Далее, производим копирование ключа на устройства, везде нужно будет ввести пароль P@ssw0rd:
 
 ```
-ssh-copy-id -p 2011 root@192.168.111.15
+ssh-copy-id -p 2011 sshuser@192.168.111.15
 ```
 
 ```
@@ -3077,17 +3113,17 @@ ssh-copy-id -p 2011 root@192.168.211.2
 ```
 
 ```
-ssh-copy-id -p 2011 root@172.16.10.2
+ssh-copy-id  root@172.16.10.2
 ```
 
 ```
-ssh-copy-id -p 2011 root@172.16.20.2
+ssh-copy-id  root@172.16.20.2
 ```
 
 Проверьте подключенеиме.
 
 ```
-ssh -p 2011 root@192.168.111.15
+ssh -p 2011 sshuser@192.168.111.15
 ```
 
 ```
@@ -3095,11 +3131,11 @@ ssh -p 2011 root@192.168.211.3
 ```
 
 ```
-ssh -p 2011 root@172.16.10.2
+ssh root@172.16.10.2
 ```
 
 ```
-ssh -p 2011 root@172.16.20.2
+ssh  root@172.16.20.2
 ```
 
 </details>
