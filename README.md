@@ -11,6 +11,15 @@
 > ## ПРЕДНАСТРОЙКА
 > <details>
 > 
+> ```
+> systemctl stop NetworkManager
+> ```
+> ```
+> systemctl disable NetworkManager
+> ```
+> ```
+> systemctl mask NetworkManager
+> ```
 > 
 > 
 ></br>
@@ -36,6 +45,16 @@
 >
 > ```
 > sysctl --system
+> ```
+>
+> ## Если OSPF в задании 7 не заработал (не уверен в легальности, использовать на свой страх и риск)
+>
+>  ```
+> echo net.ipv4.conf.default.rp_filter = 0 > /etc/sysctl.conf
+> ```
+>
+> ```
+> echo net.ipv4.conf.all.rp_filter = 0 > /etc/sysctl.conf
 > ```
 > 
 ></br>
@@ -3176,12 +3195,29 @@ BR-RTR ansible_host=172.16.20.2    ansible_port=2011    ansible_port=22
 nano /etc/ansible/ansible.cfg
 ```
 
+Вставляем данную конфигурацию
+
+```
+[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False
+remote_user = "{{ 'sshuser' if inventory_hostname == 'HQ-SRV' else 'root' }}"
+ansible_port = "{{ 2011 if inventory_hostname == 'HQ-SRV' else 22 }}"
+```
+
+<details>
+<summary><strong> Старый вариант настройки (на всякий случай)</strong></summary>
+
+# Данный вариант использует только root подключение! По этому, придётся с HQ-SRV удалить подключение по sshuser, не знаю на сколько это правильно будет сделать, но так это задание заработает
+
 ```
 [defaults]
 inventory = /etc/ansible/hosts
 host_key_checking = False
 remote_user = root
 ```
+
+</details>
 
 Запускаем проверку:
 
@@ -3698,9 +3734,36 @@ systemctl enable nftables
 <details>
 <summary><strong> Проверка </strong></summary>
 
-Проверку можно выполнить при помощи двух утелит
+Проверку можно выполнить при помощи трёх способов, желательно проверить все:
 
-Первая:
+Первый, обычное подключение по ssh по портам, на выбор у вас есть порт 2011 или 8081. Они должны переадресовывать на сервер.
+
+
+На BR-RTR
+
+```
+ssh -p 2011 sshuser@172.16.20.2
+```
+
+```
+ssh -p 8081 sshuser@172.16.20.2
+```
+
+На HQ-RTR
+
+```
+ssh -p 2011 sshuser@172.16.10.2
+```
+
+```
+ssh -p 8081 sshuser@172.16.10.2
+```
+
+Второй:
+
+```
+apt install nmap
+```
 
 ```
 nmap -p 8081,2011 172.16.10.2
@@ -3710,7 +3773,7 @@ nmap -p 8081,2011 172.16.10.2
 nmap -p 8081,2011 172.16.20.2
 ```
 
-Или вторая:
+Или третий:
 
 ```
 nc -zv 172.16.10.2 2011
